@@ -5,7 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="color-scheme" content="light dark">
-<link rel="icon" href="data:,">
+<meta name="theme-color" content="#f3f4f1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#101311" media="(prefers-color-scheme: dark)">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="보안 점검">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>휴대폰 보안 차단 점검</title>
 <style>
 :root{
@@ -112,6 +119,7 @@ dl.kv dd{margin:0;word-break:break-all}
   </div>
 
   <button type="button" class="again" id="again" disabled>다시 점검</button>
+  <button type="button" class="btn" id="install" hidden>앱으로 설치 (NFC 태그로 바로 열기)</button>
 
   <details class="more">
     <summary>자세히 (문제 확인용)</summary>
@@ -559,10 +567,12 @@ dl.kv dd{margin:0;word-break:break-all}
   }
 
   $('#again').addEventListener('click', () => run(true));
-  // 차단 안 됨·GPS 켜짐이면, 보안앱/설정에서 돌아오거나 알림창을 닫는 순간 자동 재점검
+  // 화면으로 돌아오면 자동 재점검
+  // - 차단 안 됨·GPS 켜짐: 보안앱/설정에서 돌아오거나 알림창을 닫는 순간
+  // - 그 밖: 10초 넘게 지난 결과면 (앱이 뒤에 열려 있는 채로 NFC 태그를 다시 찍은 경우 포함)
   function recheck(){
-    if(!awaitFix || running || !last || Date.now() - last.at < 1500) return;
-    if(document.visibilityState !== 'visible') return;
+    if(running || !last || document.visibilityState !== 'visible') return;
+    if(Date.now() - last.at < (awaitFix ? 1500 : 10000)) return;
     setTimeout(() => run(false), 300);
   }
   document.addEventListener('visibilitychange', recheck);
@@ -579,6 +589,28 @@ dl.kv dd{margin:0;word-break:break-all}
       ta.remove();
     }
     toast(ok ? '결과를 복사했습니다' : '복사 실패 — 화면을 캡처해 주세요');
+  });
+
+  /* ---------- 앱(PWA) ---------- */
+  // 오프라인에서도 열리도록 저장. 안드로이드 Chrome에서 설치하면 NFC 태그를 찍을 때 앱 창으로 열림
+  if('serviceWorker' in navigator && window.isSecureContext){
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+  let installEvt = null;
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    installEvt = e;
+    $('#install').hidden = false;
+  });
+  $('#install').addEventListener('click', async () => {
+    if(!installEvt) return;
+    const e = installEvt; installEvt = null;
+    $('#install').hidden = true;
+    try{ await e.prompt(); }catch(err){}
+  });
+  window.addEventListener('appinstalled', () => {
+    $('#install').hidden = true;
+    toast('설치했습니다. 이제 NFC 태그를 찍으면 앱으로 열립니다');
   });
 
   // 페이지가 열리면(NFC 태그·링크) 바로 점검
