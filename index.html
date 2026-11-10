@@ -119,7 +119,6 @@ dl.kv dd{margin:0;word-break:break-all}
   </div>
 
   <button type="button" class="again" id="again" disabled>다시 점검</button>
-  <button type="button" class="btn" id="install" hidden>앱으로 설치 (NFC 태그로 바로 열기)</button>
 
   <details class="more">
     <summary>자세히 (문제 확인용)</summary>
@@ -591,27 +590,13 @@ dl.kv dd{margin:0;word-break:break-all}
     toast(ok ? '결과를 복사했습니다' : '복사 실패 — 화면을 캡처해 주세요');
   });
 
-  /* ---------- 앱(PWA) ---------- */
-  // 오프라인에서도 열리도록 저장. 안드로이드 Chrome에서 설치하면 NFC 태그를 찍을 때 앱 창으로 열림
+  /* ---------- 오프라인 저장 ---------- */
+  // 신호가 약하거나 없어도 바로 열리도록 페이지를 저장
   if('serviceWorker' in navigator && window.isSecureContext){
     navigator.serviceWorker.register('sw.js').catch(() => {});
   }
-  let installEvt = null;
-  window.addEventListener('beforeinstallprompt', e => {
-    e.preventDefault();
-    installEvt = e;
-    $('#install').hidden = false;
-  });
-  $('#install').addEventListener('click', async () => {
-    if(!installEvt) return;
-    const e = installEvt; installEvt = null;
-    $('#install').hidden = true;
-    try{ await e.prompt(); }catch(err){}
-  });
-  window.addEventListener('appinstalled', () => {
-    $('#install').hidden = true;
-    toast('설치했습니다. 이제 NFC 태그를 찍으면 앱으로 열립니다');
-  });
+  // Chrome의 자동 '앱 설치' 안내를 띄우지 않음 (설치 시 '안전하지 않은 앱 차단됨' 경고가 뜨는 기기가 있음)
+  window.addEventListener('beforeinstallprompt', e => e.preventDefault());
 
   // 페이지가 열리면(NFC 태그·링크) 바로 점검
   run(false);
