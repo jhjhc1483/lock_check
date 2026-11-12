@@ -5,129 +5,191 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#f3f4f1" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#101311" media="(prefers-color-scheme: dark)">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="보안 점검">
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" type="image/png" href="icon-192.png">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#2563eb" id="themeColor">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath d='M24 3l17 6.2v12.1C41 32 33.8 40.7 24 44.5 14.2 40.7 7 32 7 21.3V9.2z' fill='%2316a34a'/%3E%3Cpath d='M16 24l6 6 11-12' fill='none' stroke='%23fff' stroke-width='4.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <title>휴대폰 보안 차단 점검</title>
 <style>
 :root{
-  --bg:#f3f4f1;--card:#fff;--ink:#1b211d;--muted:#5b645e;--line:#dde1db;--soft:#eceee9;
-  --accent:#2f4b3b;--accent-ink:#fff;
-  --ok:#1d6f40;--ok-bg:#e1f1e6;
-  --bad:#b3261e;--bad-bg:#fbe3e0;
-  --warn:#7a5200;--warn-bg:#faefd2;
-  --unk:#4a5560;--unk-bg:#e6eaee;
-  --r:18px;
+  --bg:#f3f4f7;--card:#fff;--ink:#101828;--muted:#667085;--line:#e4e7ec;
+  --c-run:#2563eb;--c-pass:#15803d;--c-fail:#dc2626;--c-gps:#c2410c;--c-denied:#6d28d9;--c-unknown:#475569;--c-stale:#64748b;
+  --hero:var(--c-run);
 }
 @media (prefers-color-scheme:dark){
-  :root{
-    --bg:#101311;--card:#191d1a;--ink:#e5e9e6;--muted:#99a29c;--line:#2a312c;--soft:#212723;
-    --accent:#a5c7b0;--accent-ink:#0e1912;
-    --ok:#6dd396;--ok-bg:#14301e;
-    --bad:#ff8e83;--bad-bg:#3d1916;
-    --warn:#efc369;--warn-bg:#33290f;
-    --unk:#b4bfc8;--unk-bg:#222930;
-  }
+  :root{--bg:#0c111b;--card:#161d2b;--ink:#eef2f7;--muted:#98a2b3;--line:#273246}
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-html,body{margin:0;background:var(--bg);color:var(--ink)}
-body{font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR","Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.5;-webkit-text-size-adjust:100%;word-break:keep-all}
-main{max-width:520px;margin:0 auto;padding:calc(16px + env(safe-area-inset-top)) 16px calc(32px + env(safe-area-inset-bottom))}
-.banner{margin:0 0 12px;padding:10px 12px;border-radius:10px;font-size:14px;background:var(--warn-bg);color:var(--warn)}
+html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic","Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.5;-webkit-text-size-adjust:100%;word-break:keep-all;-webkit-tap-highlight-color:transparent}
+.app{max-width:520px;margin:0 auto}
+.app[data-state="pass"]{--hero:var(--c-pass)}
+.app[data-state="fail"]{--hero:var(--c-fail)}
+.app[data-state="gps"]{--hero:var(--c-gps)}
+.app[data-state="denied"]{--hero:var(--c-denied)}
+.app[data-state="unknown"]{--hero:var(--c-unknown)}
+.app.stale{--hero:var(--c-stale)}
 
-[data-tone="ok"]{--tone:var(--ok);--tone-bg:var(--ok-bg)}
-[data-tone="bad"]{--tone:var(--bad);--tone-bg:var(--bad-bg)}
-[data-tone="warn"]{--tone:var(--warn);--tone-bg:var(--warn-bg)}
-[data-tone="unk"]{--tone:var(--unk);--tone-bg:var(--unk-bg)}
+/* ---------- 결과 화면(위쪽 색 영역) ---------- */
+.hero{position:relative;overflow:hidden;isolation:isolate;padding:calc(12px + env(safe-area-inset-top)) 18px 20px;border-radius:0 0 30px 30px;background-color:var(--hero);color:#fff;text-align:center;transition:background-color .35s}
+.hero::before{content:"";position:absolute;inset:0;z-index:-1;background-image:linear-gradient(135deg,rgba(255,255,255,.08) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.08) 50%,rgba(255,255,255,.08) 75%,transparent 75%,transparent);background-size:56px 56px;animation:stripes 1.2s linear infinite}
+.hero::after{content:"";position:absolute;z-index:-1;left:50%;top:-150px;width:520px;height:440px;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(255,255,255,.26),transparent);pointer-events:none}
+@keyframes stripes{to{background-position:56px 0}}
 
-.result{overflow:hidden;border-radius:var(--r);background:var(--tone-bg);border:3px solid var(--tone)}
-.stripe{height:12px;color:var(--tone);background:repeating-linear-gradient(90deg,currentColor 0 14px,transparent 14px 28px);background-size:28px 100%;animation:slide .8s linear infinite}
-@keyframes slide{from{background-position:0 0}to{background-position:28px 0}}
-.rbody{padding:28px 22px 20px;text-align:center}
-.icon{width:84px;height:84px;margin:0 auto 14px;color:var(--tone)}
-.icon svg{width:100%;height:100%;display:block}
-.spin{animation:spin 1s linear infinite;transform-origin:50% 50%}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:28px}
+.brand{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:800;letter-spacing:-.01em}
+.brand svg{width:18px;height:18px}
+.live{display:inline-flex;align-items:center;gap:6px;padding:4px 10px 4px 8px;border-radius:999px;background:rgba(0,0,0,.22);font-size:11px;font-weight:900;letter-spacing:.12em}
+.live i{width:8px;height:8px;border-radius:50%;background:#fff;animation:blink 1s ease-in-out infinite}
+@keyframes blink{50%{opacity:.2}}
+
+.stalebar{display:none;margin:12px 0 0;padding:9px 12px;border-radius:14px;background:#fde047;color:#422006;font-size:14px;font-weight:800}
+.app.stale .stalebar{display:block}
+.app.stale .badge,.app.stale .headline,.app.stale .chips{opacity:.45}
+
+.badge{position:relative;width:108px;height:108px;margin:24px auto 18px}
+.disc{position:absolute;inset:0;display:grid;place-items:center;border-radius:50%;background:#fff;color:var(--hero);box-shadow:0 12px 28px rgba(0,0,0,.2);transition:color .35s}
+.disc svg{width:58px;height:58px;overflow:visible}
+.ring{position:absolute;inset:-12px;border-radius:50%}
+.badge::before,.badge::after{content:"";position:absolute;inset:0;border-radius:50%;border:2px solid rgba(255,255,255,.55);opacity:0}
+.app[data-state="run"] .ring{background:conic-gradient(rgba(255,255,255,0) 0 60%,rgba(255,255,255,.95));-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 5px),#000 calc(100% - 4px));mask:radial-gradient(farthest-side,transparent calc(100% - 5px),#000 calc(100% - 4px));animation:spin 1s linear infinite}
+.app[data-state="run"] .badge::before,.app[data-state="run"] .badge::after{animation:ripple 2s ease-out infinite}
+.app[data-state="run"] .badge::after{animation-delay:1s}
+@keyframes ripple{0%{transform:scale(1);opacity:.8}100%{transform:scale(1.9);opacity:0}}
 @keyframes spin{to{transform:rotate(360deg)}}
-h1{margin:0;font-size:36px;line-height:1.2;font-weight:900;letter-spacing:-.02em;color:var(--tone)}
-.msg{margin:12px 0 0;font-size:17px;font-weight:600}
-.items{display:grid;gap:8px;margin:18px 0 0;text-align:left}
-.item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 14px;border-radius:12px;background:var(--card);border:1px solid var(--line)}
-.item .k{font-size:16px;font-weight:700}
-.item .v{display:flex;align-items:center;gap:6px;font-size:16px;font-weight:800;color:var(--tone);text-align:right}
-.item .v svg{width:20px;height:20px;flex:none}
-.item .v small{display:block;font-size:11px;font-weight:600;color:var(--muted)}
-.why{margin:12px 0 0;font-size:13px;color:var(--muted)}
-.meta{margin:4px 0 0;font-size:13px;color:var(--muted)}
-.clockbox{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-top:20px;padding-top:14px;border-top:1px solid color-mix(in srgb,var(--tone) 30%,transparent)}
-.clock{font-variant-numeric:tabular-nums;font-size:30px;font-weight:800}
-.elapsed{font-variant-numeric:tabular-nums;font-size:13px;color:var(--muted);text-align:right;white-space:pre-line}
-.hint{margin:10px 0 0;font-size:12px;color:var(--muted)}
-.result.stale .rbody>*:not(.clockbox){opacity:.35}
-.result.stale .elapsed{color:var(--bad);font-weight:800}
+.spin{animation:spin 1s linear infinite;transform-origin:50% 50%}
+.scanline{animation:scan 1.3s ease-in-out infinite alternate}
+@keyframes scan{from{transform:translateY(-7px)}to{transform:translateY(13px)}}
+.pop .disc{animation:stamp .5s cubic-bezier(.2,1.5,.45,1) both}
+.pop .ring{border:4px solid rgba(255,255,255,.9);animation:burst .7s ease-out both}
+.shake .disc{animation:shake .55s ease both}
+@keyframes stamp{0%{transform:scale(1.7) rotate(-14deg);opacity:0}100%{transform:none;opacity:1}}
+@keyframes burst{0%{transform:scale(.7);opacity:1}100%{transform:scale(1.7);opacity:0}}
+@keyframes shake{0%,100%{transform:none}20%{transform:translateX(-9px) rotate(-6deg)}40%{transform:translateX(8px) rotate(5deg)}60%{transform:translateX(-6px) rotate(-3deg)}80%{transform:translateX(4px)}}
 
-.appbox{margin-top:14px}
-.appbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;margin-top:8px;padding:16px;border-radius:14px;background:var(--bad);color:#fff;font-size:18px;font-weight:800;text-decoration:none;text-align:center}
+h1{margin:0;font-size:clamp(34px,11vw,46px);line-height:1.15;font-weight:900;letter-spacing:-.035em}
+.msg{margin:8px auto 0;max-width:22em;font-size:17px;font-weight:600;opacity:.95}
+.why{margin:8px 0 0;font-size:13px;opacity:.85}
+
+.chips{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:20px}
+.chip{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 4px 11px;border-radius:18px;background:#fff;color:#101828;box-shadow:0 6px 16px rgba(0,0,0,.14)}
+.chip .ci{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:var(--tbg);color:var(--t);transition:background-color .3s,color .3s}
+.chip .ci svg{width:22px;height:22px}
+.chip .cn{font-size:12px;font-weight:700;color:#667085;line-height:1.2}
+.chip .cv{display:flex;align-items:center;gap:3px;font-size:clamp(12px,3.8vw,14px);font-weight:900;color:var(--t);line-height:1.2;white-space:nowrap}
+.chip .cv svg{width:15px;height:15px;flex:none}
+.chip[data-tone="wait"] .ci{animation:breathe 1.2s ease-in-out infinite}
+.chip.in{animation:chipin .35s cubic-bezier(.2,1.4,.4,1)}
+@keyframes breathe{50%{transform:scale(.86)}}
+@keyframes chipin{from{transform:scale(.85)}}
+[data-tone="ok"]{--t:#15803d;--tbg:#dcfce7}
+[data-tone="bad"]{--t:#dc2626;--tbg:#fee2e2}
+[data-tone="warn"]{--t:#c2410c;--tbg:#ffedd5}
+[data-tone="unk"]{--t:#475569;--tbg:#e2e8f0}
+[data-tone="wait"]{--t:#2563eb;--tbg:#dbeafe}
+.chipnote{margin:8px 0 0;font-size:12px;opacity:.9}
+
+.clockbox{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:16px;padding:10px 16px;border-radius:18px;background:rgba(0,0,0,.18)}
+.clock{font-variant-numeric:tabular-nums;font-size:28px;font-weight:800;letter-spacing:-.01em}
+.elapsed{font-variant-numeric:tabular-nums;font-size:13px;font-weight:700;line-height:1.3;opacity:.9;text-align:right;white-space:pre-line}
+.hint{margin:10px 0 0;font-size:12px;opacity:.85}
+.meta{margin:4px 0 0;font-size:12px;opacity:.7}
+
+/* ---------- 아래쪽 안내·버튼 ---------- */
+.panel{padding:16px 16px calc(28px + env(safe-area-inset-bottom))}
+.guide{padding:18px;border-radius:22px;background:var(--card);box-shadow:0 1px 2px rgba(16,24,40,.06),0 8px 24px rgba(16,24,40,.06);animation:rise .4s ease both}
+.guide.bare{padding:0;background:none;box-shadow:none}
+@keyframes rise{from{transform:translateY(10px);opacity:0}}
+.guide h2{margin:0 0 12px;font-size:17px;font-weight:800;letter-spacing:-.01em}
+.steps{list-style:none;margin:0;padding:0;display:grid;gap:10px;counter-reset:s}
+.steps li{display:flex;gap:12px;align-items:flex-start;font-size:16px;font-weight:600;counter-increment:s}
+.steps li::before{content:counter(s);flex:none;display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--hero);color:#fff;font-size:13px;font-weight:900}
+.steps:not([hidden]) + #appbtns:not(:empty){margin-top:16px}
+.appbtn{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:10px;width:100%;margin-top:8px;padding:16px;border-radius:16px;background:var(--hero);color:#fff;font-size:18px;font-weight:800;text-decoration:none;text-align:center;box-shadow:0 10px 20px -8px var(--hero)}
+.appbtn::after{content:"";position:absolute;top:0;bottom:0;left:-60%;width:40%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);transform:skewX(-20deg);animation:shine 2.6s ease-in-out infinite}
+@keyframes shine{0%,55%{left:-60%}100%{left:130%}}
 .appbtn small{font-size:13px;font-weight:600;opacity:.85}
 .appbtn svg{width:22px;height:22px;flex:none}
-.appbtn.secondary{background:var(--card);color:var(--ink);border:1.5px solid var(--line);font-size:16px;padding:14px}
-.appnote{margin:8px 2px 0;font-size:12px;color:var(--muted);text-align:center}
-.again{display:block;width:100%;margin-top:14px;padding:16px;border:0;border-radius:14px;background:var(--accent);color:var(--accent-ink);font:inherit;font-size:18px;font-weight:800;cursor:pointer}
-.again:disabled{opacity:.5;cursor:default}
+.appbtn.secondary{background:var(--card);color:var(--ink);border:1.5px solid var(--line);box-shadow:none;font-size:16px;padding:14px}
+.appbtn.secondary::after{display:none}
+.appnote{margin:10px 2px 0;font-size:13px;color:var(--muted);text-align:center}
 
-details.more{margin-top:14px;padding:12px 14px;background:var(--card);border:1px solid var(--line);border-radius:14px}
+.again{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:14px;padding:17px;border:0;border-radius:18px;background:var(--ink);color:var(--bg);font:inherit;font-size:18px;font-weight:800;cursor:pointer;transition:transform .15s}
+.again:active{transform:scale(.98)}
+.again:disabled{opacity:.55;cursor:default}
+.again svg{width:20px;height:20px}
+.again:disabled svg{animation:spin 1s linear infinite}
+.app.stale .again{animation:nudge 1.4s ease-in-out infinite}
+@keyframes nudge{50%{transform:scale(1.03)}}
+
+details.more{margin-top:14px;padding:14px 16px;background:var(--card);border:1px solid var(--line);border-radius:18px}
 details.more summary{cursor:pointer;font-size:14px;font-weight:700;color:var(--muted)}
 dl.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;margin:12px 0 0;font-size:13px}
 dl.kv dt{color:var(--muted)}
 dl.kv dd{margin:0;word-break:break-all}
-.btn{margin-top:12px;width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font:inherit;font-size:14px;font-weight:700;cursor:pointer}
-.foot{margin:14px 4px 0;font-size:12px;color:var(--muted);text-align:center}
-.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);padding:10px 16px;border-radius:999px;background:var(--ink);color:var(--bg);font-size:14px;font-weight:600;z-index:10;white-space:nowrap}
+.btn{margin-top:12px;width:100%;padding:11px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);font:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.foot{display:flex;align-items:center;justify-content:center;gap:6px;margin:16px 4px 0;font-size:12px;color:var(--muted);text-align:center}
+.foot svg{width:14px;height:14px;flex:none}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);padding:10px 16px;border-radius:999px;background:var(--ink);color:var(--bg);font-size:14px;font-weight:600;z-index:30;white-space:nowrap}
+#confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:20}
 #probe{position:fixed;right:0;bottom:0;width:32px;height:24px;opacity:.01;pointer-events:none}
-@media (prefers-reduced-motion:reduce){.stripe{animation-duration:2.4s}}
+
+@media (min-width:560px){
+  .app{padding:24px 0}
+  .hero{border-radius:30px}
+}
+@media (prefers-reduced-motion:reduce){
+  .hero::before{animation-duration:3.6s}
+  .pop .disc,.shake .disc,.chip.in,.guide,.appbtn::after,.app.stale .again{animation:none}
+  .pop .ring{animation:none;opacity:0}
+}
 </style>
 </head>
 <body>
-<main>
-  <div id="banners"></div>
+<main class="app" id="app" data-state="run">
+  <section class="hero">
+    <div class="top">
+      <span class="brand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5l7.5 2.8v5.4c0 4.8-3.2 8.7-7.5 10.3-4.3-1.6-7.5-5.5-7.5-10.3V5.3z"/><path d="M8.8 12l2.2 2.2 4.2-4.4"/></svg>보안 차단 점검</span>
+      <span class="live" id="live" hidden><i></i>LIVE</span>
+    </div>
+    <div class="stalebar" id="stalebar">⏱ 점검한 지 2분이 지났어요. 다시 점검해 주세요</div>
 
-  <section class="result" id="result" data-tone="unk" aria-live="polite">
-    <div class="stripe"></div>
-    <div class="rbody">
-      <div class="icon" id="icon"></div>
+    <div class="badge" id="badge"><div class="ring"></div><div class="disc" id="icon"></div></div>
+    <div class="headline" aria-live="polite">
       <h1 id="title">점검 준비 중</h1>
       <p class="msg" id="msg"></p>
-      <div class="items" id="items" hidden></div>
-      <p class="why" id="why"></p>
-      <p class="meta" id="meta"></p>
-      <div class="clockbox" id="clockbox" hidden>
-        <div class="clock" id="clock">--:--:--.-</div>
-        <div class="elapsed" id="elapsed"></div>
-      </div>
-      <p class="hint" id="hint" hidden>시계와 줄무늬가 움직이면 실제 화면, 멈춰 있으면 캡처 화면입니다.</p>
     </div>
+    <div class="chips" id="chips" hidden></div>
+    <p class="chipnote" id="chipnote" hidden></p>
+    <p class="why" id="why" hidden></p>
+
+    <div class="clockbox" id="clockbox" hidden>
+      <div class="clock" id="clock">--:--:--.-</div>
+      <div class="elapsed" id="elapsed"></div>
+    </div>
+    <p class="hint" id="hint" hidden>시계와 줄무늬가 움직이면 실제 화면, 멈춰 있으면 캡처 화면이에요.</p>
+    <p class="meta" id="meta" hidden></p>
   </section>
 
-  <div class="appbox" id="appbox" hidden>
-    <div id="appbtns"></div>
-    <p class="appnote" id="appnote"></p>
-  </div>
+  <section class="panel">
+    <div class="guide" id="guide" hidden>
+      <h2 id="guideTitle" hidden></h2>
+      <ol class="steps" id="steps" hidden></ol>
+      <div id="appbtns"></div>
+      <p class="appnote" id="appnote" hidden></p>
+    </div>
 
-  <button type="button" class="again" id="again" disabled>다시 점검</button>
+    <button type="button" class="again" id="again" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v5h-5"/></svg><span id="againLabel">다시 점검</span></button>
 
-  <details class="more">
-    <summary>자세히 (문제 확인용)</summary>
-    <dl class="kv" id="raw"></dl>
-    <button type="button" class="btn" id="copy">결과 복사</button>
-  </details>
+    <details class="more">
+      <summary>자세히 (문제 확인용)</summary>
+      <dl class="kv" id="raw"></dl>
+      <button type="button" class="btn" id="copy">결과 복사</button>
+    </details>
 
-  <p class="foot">카메라·마이크·위치를 잠깐 확인만 하고, 아무것도 저장하거나 보내지 않습니다.</p>
+    <p class="foot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V7.5a3.5 3.5 0 0 1 7 0v3"/></svg>카메라·마이크·위치를 잠깐 확인만 하고, 아무것도 저장하거나 보내지 않아요.</p>
+  </section>
 </main>
+<canvas id="confetti" hidden></canvas>
 <video id="probe" playsinline muted autoplay></video>
 <div class="toast" id="toast" hidden></div>
 
@@ -145,35 +207,55 @@ dl.kv dd{margin:0;word-break:break-all}
   const IOS = /iPhone|iPad|iPod/.test(UA) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const INAPP = /KAKAOTALK|NAVER\(inapp|Instagram|FBAN|FBAV|Line\/|BAND\/|DaumApps|everytimeApp/i.test(UA);
 
+  /* ---------- 그림 ---------- */
+  const SV = '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">';
   const ICONS = {
-    check:'<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="24" r="21"/><path d="M14 24.5l7 7 13-14"/></svg>',
-    alert:'<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M24 4L45 42H3z"/><path d="M24 18v11"/><circle cx="24" cy="35.5" r="1.2" fill="currentColor"/></svg>',
-    info:'<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><circle cx="24" cy="24" r="21"/><path d="M24 22v13"/><circle cx="24" cy="14.5" r="1.2" fill="currentColor"/></svg>',
-    spin:'<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><g class="spin"><path d="M24 3a21 21 0 1 1-21 21" /></g></svg>'
+    scan: SV + '<rect x="13" y="5" width="22" height="38" rx="5"/><path d="M20 37.5h8"/><path class="scanline" d="M17 17h14" stroke-width="3.5"/></svg>',
+    shield: SV + '<path d="M24 4.5l16 5.8v11.3c0 10.2-6.8 18.4-16 22-9.2-3.6-16-11.8-16-22V10.3z"/><path d="M16.5 24l5.5 5.5 10-11"/></svg>',
+    camera: SV + '<path d="M5 17a3 3 0 0 1 3-3h5.5l3-4.5h15l3 4.5H40a3 3 0 0 1 3 3v19a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3z"/><circle cx="24" cy="26" r="7.5"/></svg>',
+    pin: SV + '<path d="M24 44s14-12.6 14-24a14 14 0 0 0-28 0c0 11.4 14 24 14 24z"/><circle cx="24" cy="20" r="5"/></svg>',
+    sliders: SV + '<path d="M7 15h19M36 15h5M7 33h5M22 33h19"/><circle cx="31" cy="15" r="5"/><circle cx="17" cy="33" r="5"/></svg>',
+    question: SV + '<circle cx="24" cy="24" r="19"/><path d="M18.5 18.5a5.5 5.5 0 1 1 7.6 5.1c-1.4.6-2.1 1.8-2.1 3.3v1.3"/><circle cx="24" cy="34.5" r="1.2" fill="currentColor"/></svg>'
   };
-
-  const PERM_HELP = IOS
-    ? '주소창의 ‘가가’ → 웹사이트 설정에서 카메라·마이크·위치를 ‘허용’으로 바꾼 뒤 다시 점검하세요.'
-    : '주소창 왼쪽 아이콘 → 권한에서 카메라·마이크·위치를 ‘허용’으로 바꾼 뒤 다시 점검하세요.';
-  const GPS_HELP = IOS
-    ? '설정 → 개인정보 보호 및 보안 → 위치 서비스를 끈 뒤 이 화면으로 돌아오세요.'
-    : '화면 위에서 아래로 쓸어내려 ‘위치’를 끈 뒤 이 화면으로 돌아오세요.';
-
-  const VERDICTS = {
-    pass:    {tone:'ok',   icon:'check', title:'차단 완료',    msg:'잘하셨습니다! 보안 차단이 적용되어 있습니다.'},
-    fail:    {tone:'bad',  icon:'alert', title:'차단 안 됨',   msg:'카메라가 켜집니다. 아래 버튼으로 보안앱을 열어 차단한 뒤 다시 점검하세요.'},
-    gps:     {tone:'bad',  icon:'alert', title:'GPS를 꺼 주세요', msg:'카메라는 차단됐지만 위치(GPS)가 켜져 있습니다. ' + GPS_HELP},
-    denied:  {tone:'warn', icon:'info',  title:'권한 허용 필요', msg:'권한이 ‘거부’로 되어 있어 점검할 수 없습니다. ' + PERM_HELP},
-    unknown: {tone:'unk',  icon:'info',  title:'점검할 수 없음', msg:'다시 점검해 주세요. 계속되면 Chrome이나 삼성 인터넷으로 여세요.'}
+  const S24 = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">';
+  const CHIP_ICON = {
+    cam: S24 + '<path d="M3 8.5A1.5 1.5 0 0 1 4.5 7H7l1.5-2h7L17 7h2.5A1.5 1.5 0 0 1 21 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z"/><circle cx="12" cy="12.5" r="3.5"/></svg>',
+    mic: S24 + '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>',
+    gps: S24 + '<path d="M12 21s7-6.3 7-11.5a7 7 0 0 0-14 0C5 14.7 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.3"/></svg>'
   };
-  // 항목별 표시
-  const GPS_ITEM = {off:{w:'꺼짐', t:'ok', i:'ok'}, on:{w:'켜짐', t:'bad', i:'x'}, denied:{w:'권한 거부', t:'warn', i:'q'}, unknown:{w:'확인 불가', t:'unk', i:'q'}};
-  const ITEM = {blocked:{w:'차단됨', t:'ok', i:'ok'}, open:{w:'차단 안 됨', t:'bad', i:'x'}, denied:{w:'권한 거부', t:'warn', i:'q'}, unknown:{w:'확인 불가', t:'unk', i:'q'}};
   const MINI = {
     ok:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
     x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
-    q:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12h14"/></svg>'
+    q:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12h14"/></svg>',
+    spin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><g class="spin"><path d="M12 3a9 9 0 1 1-9 9"/></g></svg>'
   };
+
+  /* ---------- 문구 ---------- */
+  const VERDICTS = {
+    run:     {icon:'scan', title:'점검 중…', msg:'권한 창이 뜨면 ‘허용’, 위치를 켜라는 창이 뜨면 ‘아니요’를 눌러 주세요.'},
+    pass:    {icon:'shield', title:'차단 완료', msg:'잘하셨어요! 보안 차단이 적용되어 있어요.'},
+    fail:    {icon:'camera', title:'차단 안 됨', msg:'카메라가 켜져 있어요. 보안앱에서 차단해 주세요.', shake:true,
+              guideTitle:'이렇게 차단하세요',
+              steps:['아래 ‘보안앱 열기’를 눌러요', '보안앱에서 차단을 실행해요', '이 화면으로 돌아오면 자동으로 다시 점검해요']},
+    gps:     {icon:'pin', title:'GPS를 꺼 주세요', msg:'카메라는 차단됐지만 위치(GPS)가 켜져 있어요.', shake:true,
+              guideTitle:'GPS 끄는 방법',
+              steps: IOS
+                ? ['설정 → 개인정보 보호 및 보안 → 위치 서비스로 가요', '‘위치 서비스’를 꺼요', '이 화면으로 돌아오면 자동으로 다시 점검해요']
+                : ['화면 위에서 아래로 쓸어내려요', '‘위치’ 버튼을 눌러 꺼요', '이 화면으로 돌아오면 자동으로 다시 점검해요']},
+    denied:  {icon:'sliders', title:'권한 허용 필요', msg:'권한이 ‘거부’로 되어 있어 점검할 수 없어요.',
+              guideTitle:'권한 허용 방법',
+              steps: IOS
+                ? ['주소창의 ‘가가’를 눌러요', '‘웹사이트 설정’에서 카메라·마이크·위치를 ‘허용’으로 바꿔요', '아래 ‘다시 점검’을 눌러요']
+                : ['주소창 왼쪽 아이콘을 눌러요', '‘권한’에서 카메라·마이크·위치를 ‘허용’으로 바꿔요', '아래 ‘다시 점검’을 눌러요']},
+    unknown: {icon:'question', title:'점검할 수 없음', msg:'잠시 후 다시 점검해 주세요.',
+              guideTitle:'이렇게 해 보세요',
+              steps:['아래 ‘다시 점검’을 눌러요', '계속 안 되면 Chrome이나 삼성 인터넷으로 열어요']}
+  };
+  // 상태별 색 (주소창 색도 같이 바뀜)
+  const STATE_COLOR = {run:'#2563eb', pass:'#15803d', fail:'#dc2626', gps:'#c2410c', denied:'#6d28d9', unknown:'#475569', stale:'#64748b'};
+  // 항목별 표시
+  const GPS_ITEM = {off:{w:'꺼짐', t:'ok', i:'ok'}, on:{w:'켜짐', t:'bad', i:'x'}, denied:{w:'권한 거부', t:'warn', i:'q'}, unknown:{w:'확인 불가', t:'unk', i:'q'}, pending:{w:'확인 중', t:'wait', i:'spin'}};
+  const ITEM = {blocked:{w:'차단됨', t:'ok', i:'ok'}, open:{w:'차단 안 됨', t:'bad', i:'x'}, denied:{w:'권한 거부', t:'warn', i:'q'}, unknown:{w:'확인 불가', t:'unk', i:'q'}, pending:{w:'확인 중', t:'wait', i:'spin'}};
 
   /* ---------- 보안앱 열기 ----------
      안드로이드: 앱 패키지로 실행 시도 → 실패하면 Play 스토어(설치돼 있으면 ‘열기’ 버튼)
@@ -207,18 +289,14 @@ dl.kv dd{margin:0;word-break:break-all}
   let awaitFix = false;
   function renderApp(verdict, mic){
     const show = verdict === 'fail' || verdict === 'pass';
-    $('#appbox').hidden = !show;
-    if(!show) return;
     const cls = verdict === 'fail' ? 'appbtn' : 'appbtn secondary';
-    $('#appbtns').innerHTML = appTargets().map(t =>
+    $('#appbtns').innerHTML = show ? appTargets().map(t =>
       '<a class="' + cls + '" href="' + esc(t.href) + '">' + APP_ICON + '<span>보안앱 열기' + (t.label ? ' <small>(' + esc(t.label) + ')</small>' : '') + '</span></a>'
-    ).join('');
-    const storeTip = IOS ? 'App Store가 열리면 ‘열기’를 누르세요.' : '앱이 바로 안 열리면 Play 스토어에서 ‘열기’를 누르세요.';
-    let note = '';
-    if(verdict === 'fail') note = storeTip + ' 차단 후 이 화면으로 돌아오면 자동으로 다시 점검합니다.';
-    else if(mic && mic.s === 'open' && !IOS) note = '녹음까지 막으려면 보안앱에서 2차 차단을 실행하세요. ' + storeTip;
-    $('#appnote').textContent = note;
-    $('#appnote').hidden = !note;
+    ).join('') : '';
+    const storeTip = IOS ? 'App Store가 열리면 ‘열기’를 눌러요.' : '앱이 바로 안 열리면 Play 스토어에서 ‘열기’를 눌러요.';
+    const note = verdict === 'fail' || (verdict === 'pass' && mic && mic.s === 'open' && !IOS) ? storeTip : '';
+    setText('#appnote', note);
+    updateGuide();
   }
 
   let running = false;
@@ -456,47 +534,76 @@ dl.kv dd{margin:0;word-break:break-all}
   }
 
   /* ---------- 화면 ---------- */
-  function paint(key, opts){
-    const v = VERDICTS[key] || VERDICTS.unknown;
-    const box = $('#result');
-    box.dataset.tone = opts && opts.running ? 'unk' : v.tone;
-    $('#icon').innerHTML = ICONS[opts && opts.running ? 'spin' : v.icon];
-    $('#title').textContent = opts && opts.running ? '점검 중…' : v.title;
-    $('#msg').textContent = opts && opts.running ? '권한 창이 뜨면 ‘허용’, 위치를 켜라는 창이 뜨면 ‘아니요’를 눌러 주세요.' : ((opts && opts.msg) || v.msg);
-    $('#why').textContent = (opts && opts.why) || '';
-    $('#meta').textContent = (opts && opts.meta) || '';
+  function setText(sel, t){ const el = $(sel); el.textContent = t || ''; el.hidden = !t; }
+  function setTheme(c){ const m = $('#themeColor'); if(m && m.getAttribute('content') !== c) m.setAttribute('content', c); }
+  function updateGuide(){
+    const hasSteps = !$('#steps').hidden;
+    const hasBtns = !!$('#appbtns').innerHTML;
+    const g = $('#guide');
+    g.classList.toggle('bare', !hasSteps);
+    g.hidden = !(hasSteps || hasBtns);
   }
-  function renderItems(cam, mic, gps){
-    const box = $('#items');
-    if(!cam){ box.hidden = true; box.innerHTML = ''; return; }
-    const row = (name, r, note, map) => {
-      map = map || ITEM;
-      const it = map[r ? r.s : 'unknown'] || map.unknown;
-      return '<div class="item" data-tone="' + it.t + '"><span class="k">' + esc(name) + '</span><span class="v">' + MINI[it.i] +
-             '<span>' + esc(it.w) + (note ? '<small>' + esc(note) + '</small>' : '') + '</span></span></div>';
-    };
-    const micNote = IOS && mic && mic.s === 'open' ? '아이폰은 녹음 차단 미지원' : '';
-    box.innerHTML = row('카메라', cam) + row('녹음', mic, micNote) + row('위치(GPS)', gps, '', GPS_ITEM);
-    box.hidden = false;
+  function paint(key, opts){
+    opts = opts || {};
+    if(!VERDICTS[key]) key = 'unknown';
+    const v = VERDICTS[key];
+    const app = $('#app');
+    app.dataset.state = key;
+    app.classList.remove('stale');
+    setTheme(STATE_COLOR[key]);
+    $('#icon').innerHTML = ICONS[v.icon];
+    $('#title').textContent = v.title;
+    $('#msg').textContent = opts.msg || v.msg;
+    setText('#why', opts.why);
+    setText('#meta', opts.meta);
+    const steps = opts.steps || v.steps || [];
+    $('#steps').innerHTML = steps.map(s => '<li>' + esc(s) + '</li>').join('');
+    $('#steps').hidden = !steps.length;
+    setText('#guideTitle', steps.length ? (opts.guideTitle || v.guideTitle || '') : '');
+    updateGuide();
+    // 결과가 나오면 도장 찍듯 등장, 문제가 있으면 흔들기
+    const badge = $('#badge');
+    badge.classList.remove('pop', 'shake');
+    void badge.offsetWidth;
+    if(key !== 'run'){ badge.classList.add('pop'); if(v.shake) badge.classList.add('shake'); }
+  }
+  function chipsReset(){
+    const row = (id, name) => '<div class="chip" data-id="' + id + '" data-tone="wait"><span class="ci">' + CHIP_ICON[id] +
+      '</span><span class="cn">' + esc(name) + '</span><span class="cv">' + MINI.spin + '<span>확인 중</span></span></div>';
+    $('#chips').innerHTML = row('cam', '카메라') + row('mic', '녹음') + row('gps', '위치(GPS)');
+    $('#chips').hidden = false;
+    setText('#chipnote', '');
+  }
+  function chipsHide(){ $('#chips').hidden = true; $('#chips').innerHTML = ''; setText('#chipnote', ''); }
+  function setChip(id, r, map){
+    const el = document.querySelector('.chip[data-id="' + id + '"]');
+    if(!el) return;
+    const it = map[r ? r.s : 'unknown'] || map.unknown;
+    el.dataset.tone = it.t;
+    el.querySelector('.cv').innerHTML = MINI[it.i] + '<span>' + esc(it.w) + '</span>';
+    el.classList.remove('in'); void el.offsetWidth; el.classList.add('in');
   }
   function startClock(atMs){
     if(clockTimer) clearInterval(clockTimer);
-    $('#clockbox').hidden = false; $('#hint').hidden = false;
-    const box = $('#result');
+    $('#clockbox').hidden = false; $('#hint').hidden = false; $('#live').hidden = false;
+    const app = $('#app');
     const tick = () => {
       const now = new Date();
       $('#clock').textContent = pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds()) + '.' + Math.floor(now.getMilliseconds() / 100);
       const el = Math.max(0, Math.floor((now.getTime() - atMs) / 1000));
       const stale = el > 120;
-      $('#elapsed').textContent = '점검 후 ' + pad(Math.floor(el / 60)) + ':' + pad(el % 60) + (stale ? '\n다시 점검 필요' : '');
-      box.classList.toggle('stale', stale);
+      $('#elapsed').textContent = '점검 후\n' + pad(Math.floor(el / 60)) + ':' + pad(el % 60);
+      if(stale !== app.classList.contains('stale')){
+        app.classList.toggle('stale', stale);
+        setTheme(stale ? STATE_COLOR.stale : STATE_COLOR[app.dataset.state]);
+      }
     };
     tick(); clockTimer = setInterval(tick, 100);
   }
   function stopClock(){
     if(clockTimer) clearInterval(clockTimer);
-    $('#clockbox').hidden = true; $('#hint').hidden = true;
-    $('#result').classList.remove('stale');
+    $('#clockbox').hidden = true; $('#hint').hidden = true; $('#live').hidden = true;
+    $('#app').classList.remove('stale');
   }
   function renderRaw(r){
     const rows = [
@@ -518,49 +625,98 @@ dl.kv dd{margin:0;word-break:break-all}
     const el = $('#toast'); el.textContent = t; el.hidden = false;
     clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.hidden = true; }, 2200);
   }
+  // 차단 완료 축하 색종이
+  let confettiId = 0;
+  function confetti(){
+    if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const cv = $('#confetti');
+    const ctx = cv.getContext && cv.getContext('2d');
+    if(!ctx) return;
+    const id = ++confettiId;
+    const W = innerWidth, H = innerHeight, dpr = Math.min(window.devicePixelRatio || 1, 2);
+    cv.width = W * dpr; cv.height = H * dpr; cv.hidden = false;
+    ctx.scale(dpr, dpr);
+    const b = $('#badge').getBoundingClientRect();
+    const ox = b.left + b.width / 2, oy = b.top + b.height / 2;
+    const colors = ['#facc15', '#4ade80', '#60a5fa', '#f472b6', '#fb923c', '#a78bfa', '#ffffff'];
+    const ps = Array.from({length:150}, () => {
+      const a = Math.random() * Math.PI * 2, sp = 4 + Math.random() * 11;
+      return {x:ox, y:oy, vx:Math.cos(a) * sp, vy:Math.sin(a) * sp - 6, w:6 + Math.random() * 6, h:9 + Math.random() * 8,
+              r:Math.random() * Math.PI, vr:(Math.random() - .5) * .35, c:colors[(Math.random() * colors.length) | 0]};
+    });
+    const t0 = performance.now(), dur = 2300;
+    const frame = t => {
+      if(id !== confettiId) return;
+      const k = (t - t0) / dur;
+      ctx.clearRect(0, 0, W, H);
+      ctx.globalAlpha = Math.max(0, Math.min(1, (1 - k) * 2.5));
+      for(const p of ps){
+        p.vy += .32; p.vx *= .985; p.x += p.vx; p.y += p.vy; p.r += p.vr;
+        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r);
+        ctx.fillStyle = p.c; ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h * Math.abs(Math.cos(p.r * 2)) + 2);
+        ctx.restore();
+      }
+      if(k < 1) requestAnimationFrame(frame);
+      else { ctx.clearRect(0, 0, W, H); cv.hidden = true; }
+    };
+    requestAnimationFrame(frame);
+  }
 
   /* ---------- 실행 ---------- */
   async function run(withGesture){
     if(running) return;
     running = true;
     awaitFix = false;
-    const btn = $('#again'); btn.disabled = true;
+    const btn = $('#again'); btn.disabled = true; $('#againLabel').textContent = '점검 중…';
     stopClock();
-    $('#appbox').hidden = true;
-    renderItems(null);
-    paint('unknown', {running:true});
+    renderApp(null);
+    paint('run');
+    chipsReset();
     let ac = null;
     if(withGesture){
       try{ const AC = window.AudioContext || window.webkitAudioContext; if(AC){ ac = new AC(); ac.resume && ac.resume().catch(() => {}); } }catch(e){ ac = null; }
     }
     try{
       if(!window.isSecureContext){
-        paint('unknown', {msg:'https 주소로 열어야 점검할 수 있습니다.'}); return;
+        chipsHide();
+        paint('unknown', {msg:'https 주소로 열어야 점검할 수 있어요.', steps:['주소가 https:// 로 시작하는지 확인해요', '태그나 링크를 다시 눌러 열어요']});
+        return;
       }
       if(INAPP){
-        paint('unknown', {msg:'카카오톡 등 앱 안 브라우저에서는 점검이 안 됩니다. 메뉴에서 ‘다른 브라우저로 열기’를 눌러 Chrome·삼성 인터넷으로 여세요.'}); return;
+        chipsHide();
+        paint('unknown', {msg:'카카오톡 같은 앱 안의 브라우저에서는 점검이 안 돼요.', guideTitle:'다른 브라우저로 여는 방법',
+                          steps:['화면의 메뉴(⋮ 또는 ···)를 눌러요', '‘다른 브라우저로 열기’를 눌러요', 'Chrome이나 삼성 인터넷을 골라요']});
+        return;
       }
       const cam = await checkDevice('video', ac);
+      setChip('cam', cam, ITEM);
       const mic = await checkDevice('audio', ac);
+      setChip('mic', mic, ITEM);
+      if(IOS && mic.s === 'open') setText('#chipnote', '아이폰은 녹음 차단을 지원하지 않아요');
       const gps = await checkGps();
+      setChip('gps', gps, GPS_ITEM);
       const net = netType();
       const verdict = overall(cam, gps);
       const at = Date.now();
       last = {verdict, at, cam, mic, gps, net, device:deviceLine(), browser:browserName()};
-      const why = verdict === 'unknown' || verdict === 'denied' ? '카메라: ' + cam.why + ' · 위치: ' + gps.why : '';
-      const meta = [deviceLine(), browserName(), net ? '네트워크: ' + netWord(net) : ''].filter(x => x && x !== '알 수 없음').join(' · ');
-      const msg = verdict === 'pass' && gps.s === 'off' ? '잘하셨습니다! 보안 차단과 GPS 끄기가 모두 확인됐습니다.' : '';
-      paint(verdict, {why, meta, msg});
-      renderItems(cam, mic, gps);
+      const opts = {
+        why: verdict === 'unknown' || verdict === 'denied' ? '카메라: ' + cam.why + ' · 위치: ' + gps.why : '',
+        meta: [deviceLine(), browserName(), net ? '네트워크: ' + netWord(net) : ''].filter(x => x && x !== '알 수 없음').join(' · ')
+      };
+      if(verdict === 'pass' && gps.s === 'off') opts.msg = '잘하셨어요! 보안 차단과 GPS 끄기가 모두 확인됐어요.';
+      if(verdict === 'pass' && mic.s === 'open' && !IOS){ opts.guideTitle = '녹음까지 막으려면'; opts.steps = ['보안앱을 열어요', '2차 차단을 실행해요']; }
+      paint(verdict, opts);
       awaitFix = verdict === 'fail' || verdict === 'gps';
       startClock(at);
       renderRaw(last);
       renderApp(verdict, mic);
+      if(verdict === 'pass') confetti();
     }catch(e){
+      chipsHide();
       paint('unknown', {why:'오류: ' + ((e && e.message) || e)});
     }finally{
       if(ac){ try{ await ac.close(); }catch(e){} }
-      btn.disabled = false;
+      btn.disabled = false; $('#againLabel').textContent = '다시 점검';
       running = false;
     }
   }
@@ -568,7 +724,7 @@ dl.kv dd{margin:0;word-break:break-all}
   $('#again').addEventListener('click', () => run(true));
   // 화면으로 돌아오면 자동 재점검
   // - 차단 안 됨·GPS 켜짐: 보안앱/설정에서 돌아오거나 알림창을 닫는 순간
-  // - 그 밖: 10초 넘게 지난 결과면 (앱이 뒤에 열려 있는 채로 NFC 태그를 다시 찍은 경우 포함)
+  // - 그 밖: 10초 넘게 지난 결과면 (페이지가 뒤에 열려 있는 채로 NFC 태그를 다시 찍은 경우 포함)
   function recheck(){
     if(running || !last || document.visibilityState !== 'visible') return;
     if(Date.now() - last.at < (awaitFix ? 1500 : 10000)) return;
@@ -577,7 +733,7 @@ dl.kv dd{margin:0;word-break:break-all}
   document.addEventListener('visibilitychange', recheck);
   window.addEventListener('focus', recheck);
   $('#copy').addEventListener('click', async () => {
-    if(!last){ toast('아직 점검 결과가 없습니다'); return; }
+    if(!last){ toast('아직 점검 결과가 없어요'); return; }
     const text = JSON.stringify(last, null, 1);
     let ok = false;
     try{ if(navigator.clipboard && window.isSecureContext){ await navigator.clipboard.writeText(text); ok = true; } }catch(e){}
@@ -587,16 +743,16 @@ dl.kv dd{margin:0;word-break:break-all}
       try{ ok = document.execCommand('copy'); }catch(e){}
       ta.remove();
     }
-    toast(ok ? '결과를 복사했습니다' : '복사 실패 — 화면을 캡처해 주세요');
+    toast(ok ? '결과를 복사했어요' : '복사 실패 — 화면을 캡처해 주세요');
   });
 
-  /* ---------- 오프라인 저장 ---------- */
-  // 신호가 약하거나 없어도 바로 열리도록 페이지를 저장
-  if('serviceWorker' in navigator && window.isSecureContext){
-    navigator.serviceWorker.register('sw.js').catch(() => {});
+  // 예전 버전이 깔아 둔 오프라인 저장(서비스 워커)을 정리
+  if('serviceWorker' in navigator && navigator.serviceWorker.getRegistrations){
+    navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister())).catch(() => {});
   }
-  // Chrome의 자동 '앱 설치' 안내를 띄우지 않음 (설치 시 '안전하지 않은 앱 차단됨' 경고가 뜨는 기기가 있음)
-  window.addEventListener('beforeinstallprompt', e => e.preventDefault());
+  if(window.caches && caches.keys){
+    caches.keys().then(ks => ks.filter(k => k.indexOf('lockcheck-') === 0).forEach(k => caches.delete(k))).catch(() => {});
+  }
 
   // 페이지가 열리면(NFC 태그·링크) 바로 점검
   run(false);

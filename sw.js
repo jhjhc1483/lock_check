@@ -1,33 +1,14 @@
-/* 오프라인에서도 바로 열리도록 페이지를 저장해 두는 서비스 워커.
-   저장된 화면을 즉시 보여 주고, 연결돼 있으면 뒤에서 최신 버전으로 바꿔 둔다(다음 실행부터 반영).
-   점검 결과는 어디에도 저장하지 않는다. */
-const CACHE = 'lockcheck-v1';
-const ASSETS = ['./', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'apple-touch-icon.png'];
-
-self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
-});
-
+/* 예전 버전(PWA)이 깔아 둔 오프라인 저장을 지우는 파일.
+   이미 이 사이트를 열어 본 휴대폰에서 낡은 화면이 계속 뜨지 않도록,
+   저장해 둔 화면을 모두 지우고 스스로 해제한 뒤 새 화면으로 다시 연다.
+   모든 휴대폰에서 정리가 끝난 뒤(몇 달 뒤)에는 이 파일을 지워도 된다. */
+self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', e => {
-  e.waitUntil(
-    caches.keys()
-      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
-      .then(() => self.clients.claim())
-  );
-});
-
-self.addEventListener('fetch', e => {
-  const req = e.request;
-  if (req.method !== 'GET' || new URL(req.url).origin !== location.origin) return;
-  // ?app=soldier 같은 주소도 같은 페이지로 취급
-  const key = req.mode === 'navigate' ? self.registration.scope : req;
-  e.respondWith(caches.open(CACHE).then(async cache => {
-    const hit = await cache.match(key, {ignoreSearch: true});
-    const net = fetch(req).then(res => {
-      if (res.ok && !res.redirected) cache.put(key, res.clone());
-      return res;
-    });
-    if (hit) { e.waitUntil(net.catch(() => {})); return hit; }
-    return net;
-  }));
+  e.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.map(k => caches.delete(k)));
+    await self.registration.unregister();
+    const clients = await self.clients.matchAll({type: 'window'});
+    clients.forEach(c => c.navigate(c.url).catch(() => {}));
+  })());
 });
